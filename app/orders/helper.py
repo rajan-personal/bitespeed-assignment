@@ -50,6 +50,31 @@ def check_if_primary_order_exists(email, phoneNumber):
         return primary_order_email
     elif primary_order_phoneNumber:
         return primary_order_phoneNumber
+
+def prev_orders(email, phoneNumber):
+    orders = Order.objects.filter(Q(email=email) & Q(email__isnull=False) | Q(phoneNumber=phoneNumber) & Q(phoneNumber__isnull=False)).exclude(deletedAt__isnull=False).order_by('createdAt')
+    if orders:
+        primary_ids = set()
+        secondary_ids = set()
+        emails = set()
+        phoneNumbers = set()
+        for order in orders:
+            if order.linkPrecedence == LinkPrecedence.PRIMARY:
+                primary_ids.add(order.id)
+            else:
+                secondary_ids.add(order.id)
+            if order.email:
+                emails.add(order.email)
+            if order.phoneNumber:
+                phoneNumbers.add(order.phoneNumber)
+        return {
+            'primary_ids': list(primary_ids),
+            'secondary_ids': list(secondary_ids),
+            'emails': list(emails),
+            'phoneNumbers': list(phoneNumbers)
+        }
+    else:
+        return {}
     
 
 
